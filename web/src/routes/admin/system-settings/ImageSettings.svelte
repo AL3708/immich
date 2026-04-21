@@ -1,6 +1,7 @@
 <script lang="ts">
   import SettingSelect from './setting-select.svelte';
   import { Colorspace, ImageFormat } from '@immich/sdk';
+  import { Alert } from '@immich/ui';
   import { fade } from 'svelte/transition';
 
   import SettingAccordion from '$lib/components/shared-components/settings/setting-accordion.svelte';
@@ -15,6 +16,8 @@
   const disabled = $derived(featureFlagsManager.value.configFile);
   const config = $derived(systemConfigManager.value);
   let configToEdit = $state(systemConfigManager.cloneValue());
+
+  const isNonProgressiveFormat = (format: ImageFormat) => format === ImageFormat.Webp || format === ImageFormat.Avif;
 </script>
 
 <div>
@@ -33,16 +36,20 @@
             options={[
               { value: ImageFormat.Jpeg, text: 'JPEG' },
               { value: ImageFormat.Webp, text: 'WebP' },
+              { value: ImageFormat.Avif, text: $t('admin.image_format_avif') },
             ]}
             name="format"
             isEdited={configToEdit.image.thumbnail.format !== config.image.thumbnail.format}
             {disabled}
             onSelect={(value) => {
-              if (value === ImageFormat.Webp) {
+              if (isNonProgressiveFormat(value as ImageFormat)) {
                 configToEdit.image.thumbnail.progressive = false;
               }
             }}
           />
+          {#if configToEdit.image.thumbnail.format === ImageFormat.Avif}
+            <Alert color="warning" class="my-2" title={$t('admin.image_format_avif_warning')} />
+          {/if}
 
           <SettingSelect
             label={$t('admin.image_resolution')}
@@ -76,7 +83,7 @@
             checked={configToEdit.image.thumbnail.progressive}
             onToggle={(isChecked) => (configToEdit.image.thumbnail.progressive = isChecked)}
             isEdited={configToEdit.image.thumbnail.progressive !== config.image.thumbnail.progressive}
-            disabled={disabled || configToEdit.image.thumbnail.format === ImageFormat.Webp}
+            disabled={disabled || isNonProgressiveFormat(configToEdit.image.thumbnail.format)}
           />
         </SettingAccordion>
 
@@ -92,16 +99,20 @@
             options={[
               { value: ImageFormat.Jpeg, text: 'JPEG' },
               { value: ImageFormat.Webp, text: 'WebP' },
+              { value: ImageFormat.Avif, text: $t('admin.image_format_avif') },
             ]}
             name="format"
             isEdited={configToEdit.image.preview.format !== config.image.preview.format}
             {disabled}
             onSelect={(value) => {
-              if (value === ImageFormat.Webp) {
+              if (isNonProgressiveFormat(value as ImageFormat)) {
                 configToEdit.image.preview.progressive = false;
               }
             }}
           />
+          {#if configToEdit.image.preview.format === ImageFormat.Avif}
+            <Alert color="warning" class="my-2" title={$t('admin.image_format_avif_warning')} />
+          {/if}
 
           <SettingSelect
             label={$t('admin.image_resolution')}
@@ -134,7 +145,7 @@
             checked={configToEdit.image.preview.progressive}
             onToggle={(isChecked) => (configToEdit.image.preview.progressive = isChecked)}
             isEdited={configToEdit.image.preview.progressive !== config.image.preview.progressive}
-            disabled={disabled || configToEdit.image.preview.format === ImageFormat.Webp}
+            disabled={disabled || isNonProgressiveFormat(configToEdit.image.preview.format)}
           />
         </SettingAccordion>
 
@@ -161,16 +172,20 @@
             options={[
               { value: ImageFormat.Jpeg, text: 'JPEG' },
               { value: ImageFormat.Webp, text: 'WebP' },
+              { value: ImageFormat.Avif, text: $t('admin.image_format_avif') },
             ]}
             name="format"
             isEdited={configToEdit.image.fullsize.format !== config.image.fullsize.format}
             disabled={disabled || !configToEdit.image.fullsize.enabled}
             onSelect={(value) => {
-              if (value === ImageFormat.Webp) {
+              if (isNonProgressiveFormat(value as ImageFormat)) {
                 configToEdit.image.fullsize.progressive = false;
               }
             }}
           />
+          {#if configToEdit.image.fullsize.enabled && configToEdit.image.fullsize.format === ImageFormat.Avif}
+            <Alert color="warning" class="my-2" title={$t('admin.image_format_avif_warning')} />
+          {/if}
 
           <SettingInputField
             inputType={SettingInputFieldType.NUMBER}
@@ -189,7 +204,7 @@
             isEdited={configToEdit.image.fullsize.progressive !== config.image.fullsize.progressive}
             disabled={disabled ||
               !configToEdit.image.fullsize.enabled ||
-              configToEdit.image.fullsize.format === ImageFormat.Webp}
+              isNonProgressiveFormat(configToEdit.image.fullsize.format)}
           />
         </SettingAccordion>
 

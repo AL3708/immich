@@ -57,6 +57,9 @@ interface UpsertFileOptions {
 
 type ThumbnailAsset = NonNullable<Awaited<ReturnType<AssetJobRepository['getForGenerateThumbnailJob']>>>;
 
+const PROGRESSIVE_IMAGE_FORMATS: ReadonlySet<ImageFormat> = new Set([ImageFormat.Jpeg]);
+const supportsProgressive = (format: ImageFormat) => PROGRESSIVE_IMAGE_FORMATS.has(format);
+
 @Injectable()
 export class MediaService extends BaseService {
   videoInterfaces: VideoInterfaces = { dri: [], mali: false };
@@ -321,14 +324,14 @@ export class MediaService extends BaseService {
       fileType: AssetFileType.Preview,
       format: previewFormat,
       isEdited: useEdits,
-      isProgressive: !!image.preview.progressive && previewFormat !== ImageFormat.Webp,
+      isProgressive: !!image.preview.progressive && supportsProgressive(previewFormat),
       isTransparent,
     });
     const thumbnailFile = this.getImageFile(asset, {
       fileType: AssetFileType.Thumbnail,
       format: thumbnailFormat,
       isEdited: useEdits,
-      isProgressive: !!image.thumbnail.progressive && thumbnailFormat !== ImageFormat.Webp,
+      isProgressive: !!image.thumbnail.progressive && supportsProgressive(thumbnailFormat),
       isTransparent,
     });
     this.storageCore.ensureFolders(previewFile.path);
@@ -352,7 +355,7 @@ export class MediaService extends BaseService {
         fileType: AssetFileType.FullSize,
         format: fullsizeFormat,
         isEdited: useEdits,
-        isProgressive: !!image.fullsize.progressive && fullsizeFormat !== ImageFormat.Webp,
+        isProgressive: !!image.fullsize.progressive && supportsProgressive(fullsizeFormat),
         isTransparent,
       });
       const fullsizeOptions = {
@@ -367,7 +370,7 @@ export class MediaService extends BaseService {
         fileType: AssetFileType.FullSize,
         format: extracted.format,
         isEdited: false,
-        isProgressive: !!image.fullsize.progressive && image.fullsize.format !== ImageFormat.Webp,
+        isProgressive: !!image.fullsize.progressive && supportsProgressive(image.fullsize.format),
         isTransparent,
       });
       this.storageCore.ensureFolders(fullsizeFile.path);

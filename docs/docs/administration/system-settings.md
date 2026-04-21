@@ -31,17 +31,26 @@ By default Immich creates 3 thumbnails for each asset,
 Blurred (thumbhash) , Small - thumbnails (webp) , and Large - previews (jpeg/webp), using these settings you can change the quality for the thumbnails and previews files that are created.
 
 **Thumbnail format**  
-Allows you to choose the type of format you want for the Thumbnail images, Webp produces smaller files than jpeg, but is slower to encode.
+Allows you to choose the type of format you want for the Thumbnail images. WebP produces smaller files than JPEG, but is slower to encode. AVIF (experimental) produces even smaller files at the cost of significantly slower encoding and stricter client compatibility requirements.
 
 :::tip
 You can read in detail about the advantages and disadvantages of using webp over jpeg on [Adobe's website](https://www.adobe.com/creativecloud/file-types/image/raster/webp-file.html)
+:::
+
+:::warning Experimental: AVIF format
+AVIF offers the best compression of the three formats, but:
+
+- Encoding is significantly slower than WebP/JPEG — regenerating a large library can take hours or days depending on hardware.
+- The mobile app relies on native platform decoders; AVIF requires **iOS 16+** or **Android 12+** (API 31). Older devices will show a broken thumbnail.
+- Browser support: Chrome 85+, Firefox 93+, Safari 16+.
+- After changing the format, run **Administration → Jobs → Thumbnail Generation → All** to rebuild existing thumbnails in the new format (or `Missing` to only regenerate assets without a matching thumbnail). Existing files in the old format are removed automatically as each asset is reprocessed.
 :::
 
 **Thumbnail resolution**  
 Used when viewing groups of photos (main timeline, album view, etc.). Higher resolutions can preserve more detail but take longer to encode, have larger file sizes, and can reduce app responsiveness.
 
 **Preview format**  
-Allows you to choose the type of format you want for the Preview images, Webp produces smaller files than jpeg, but is slower to encode.
+Allows you to choose the type of format you want for the Preview images. WebP produces smaller files than JPEG, but is slower to encode. AVIF (experimental) offers the best compression but is the slowest to encode — see the warning under **Thumbnail format** for client-compatibility requirements.
 
 **Preview resolution**  
 Used when viewing a single photo and for machine learning. Higher resolutions can preserve more detail but take longer to encode, have larger file sizes, and can reduce app responsiveness.

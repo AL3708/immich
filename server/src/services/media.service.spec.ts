@@ -853,6 +853,40 @@ describe(MediaService.name, () => {
       ]);
     });
 
+    it.each([ImageFormat.Webp, ImageFormat.Avif])(
+      'should force isProgressive=false for %s thumbnails even when progressive is requested',
+      async (format) => {
+        const asset = AssetFactory.from().exif().build();
+        mocks.systemMetadata.get.mockResolvedValue({
+          image: { preview: { progressive: false }, thumbnail: { format, progressive: true } },
+        });
+        mocks.assetJob.getForGenerateThumbnailJob.mockResolvedValue(getForGenerateThumbnail(asset));
+
+        await sut.handleGenerateThumbnails({ id: asset.id });
+
+        expect(mocks.media.generateThumbnail).toHaveBeenCalledWith(
+          rawBuffer,
+          expect.objectContaining({
+            format,
+            progressive: false,
+          }),
+          expect.stringContaining(`thumbnail.${format}`),
+        );
+        expect(mocks.asset.upsertFiles).toHaveBeenCalledWith([
+          expect.objectContaining({
+            type: AssetFileType.Preview,
+            isProgressive: false,
+            isTransparent: false,
+          }),
+          expect.objectContaining({
+            type: AssetFileType.Thumbnail,
+            isProgressive: false,
+            isTransparent: false,
+          }),
+        ]);
+      },
+    );
+
     it('should never set isProgressive for videos', async () => {
       const asset = AssetFactory.from({ type: AssetType.Video, originalPath: '/original/path.ext' }).exif().build();
       mocks.media.probe.mockResolvedValue(probeStub.videoStreamHDR);
@@ -1337,6 +1371,36 @@ describe(MediaService.name, () => {
         expect.stringContaining('fullsize.jpeg'),
       );
     });
+
+    it.each([ImageFormat.Webp, ImageFormat.Avif])(
+      'should force progressive=false for %s fullsize even when requested',
+      async (format) => {
+        mocks.systemMetadata.get.mockResolvedValue({
+          image: { fullsize: { enabled: true, format, progressive: true } },
+        });
+        mocks.media.extract.mockResolvedValue({ buffer: extractedBuffer, format: RawExtractedFormat.Jpeg });
+        mocks.media.getImageMetadata.mockResolvedValue({ width: 3840, height: 2160, isTransparent: false });
+        const asset = AssetFactory.from({ originalFileName: 'image.hif' })
+          .exif({
+            fileSizeInByte: 5000,
+            profileDescription: 'Adobe RGB',
+            bitsPerSample: 14,
+          })
+          .build();
+        mocks.assetJob.getForGenerateThumbnailJob.mockResolvedValue(getForGenerateThumbnail(asset));
+
+        await sut.handleGenerateThumbnails({ id: asset.id });
+
+        expect(mocks.media.generateThumbnail).toHaveBeenCalledWith(
+          rawBuffer,
+          expect.objectContaining({
+            format,
+            progressive: false,
+          }),
+          expect.stringContaining(`fullsize.${format}`),
+        );
+      },
+    );
   });
 
   describe('handleAssetEditThumbnailGeneration', () => {
