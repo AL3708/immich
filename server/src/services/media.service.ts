@@ -338,8 +338,18 @@ export class MediaService extends BaseService {
 
     // generate final images
     const baseOptions = { colorspace, processInvalidImages: false, raw: info, edits: useEdits ? asset.edits : [] };
-    const thumbnailOptions = { ...image.thumbnail, ...baseOptions, format: thumbnailFormat };
-    const previewOptions = { ...image.preview, ...baseOptions, format: previewFormat };
+    const thumbnailOptions = {
+      ...image.thumbnail,
+      ...baseOptions,
+      format: thumbnailFormat,
+      progressive: !!image.thumbnail.progressive && supportsProgressive(thumbnailFormat),
+    };
+    const previewOptions = {
+      ...image.preview,
+      ...baseOptions,
+      format: previewFormat,
+      progressive: !!image.preview.progressive && supportsProgressive(previewFormat),
+    };
     const promises = [
       this.mediaRepository.generateThumbhash(data, baseOptions),
       this.mediaRepository.generateThumbnail(data, thumbnailOptions, thumbnailFile.path),
@@ -362,7 +372,7 @@ export class MediaService extends BaseService {
         ...baseOptions,
         format: fullsizeFormat,
         quality: image.fullsize.quality,
-        progressive: image.fullsize.progressive,
+        progressive: !!image.fullsize.progressive && supportsProgressive(fullsizeFormat),
       };
       promises.push(this.mediaRepository.generateThumbnail(data, fullsizeOptions, fullsizeFile.path));
     } else if (generateFullsize && extracted && extracted.format === RawExtractedFormat.Jpeg) {
